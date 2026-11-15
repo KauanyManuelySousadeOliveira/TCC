@@ -1,0 +1,3 @@
+<div class="page-head"><div><h1>Olá, <?= e($u['nome']) ?></h1><p>Resumo do seu dia — <?= e(fmt_date(date('Y-m-d'))) ?>.</p></div><a class="btn btn-primary" href="/medico/agenda">📅 Ver agenda</a></div>
+<div class="stat-row"><?php foreach ([[count($hoje),'Consultas hoje'],[$futuras,'Consultas futuras'],[$pacientes,'Meus pacientes'],[$realizadas,'Realizadas']] as [$n,$l]): ?><div class="card stat-card"><div class="stat-num"><?= $n ?></div><div class="stat-label"><?= $l ?></div></div><?php endforeach; ?></div>
+<div class="section-title">Agenda de hoje</div><?php $lista = $hoje; $mostrar = ['paciente']; $acoes = null; require __DIR__ . '/../partials/consultas.php'; ?>

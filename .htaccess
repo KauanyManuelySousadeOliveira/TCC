@@ -1,0 +1,4 @@
+# Para XAMPP/hospedagem sem DocumentRoot em /public: encaminha tudo para public/
+RewriteEngine On
+RewriteRule ^$ public/ [L]
+RewriteRule (.*) public/$1 [L]

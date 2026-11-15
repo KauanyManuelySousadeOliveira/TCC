@@ -1,0 +1,4 @@
+<div class="page-head"><div><h1>Agendar para paciente</h1><p>Escolha o paciente e siga o fluxo de agendamento.</p></div></div>
+<div class="card pad" style="margin-bottom:16px"><form method="get" action="/recepcao/agendar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>Paciente:</b>
+<select name="pac" onchange="this.form.submit()" style="padding:8px;border:1px solid var(--sage-line);border-radius:7px;min-width:260px"><option value="">Selecione…</option><?php foreach ($pacientes as $p): if (!$p['ativo']) continue; ?><option value="<?= (int)$p['id'] ?>" <?= $pac && $pac['id'] == $p['id'] ? 'selected' : '' ?>><?= e($p['nome']) ?> — <?= e(fmt_cpf($p['cpf'])) ?></option><?php endforeach; ?></select><noscript><button class="btn btn-secondary">OK</button></noscript></form></div>
+<?php if ($pac): ?><div class="card pad"><?php require __DIR__ . '/../partials/booking.php'; ?></div><?php endif; ?>

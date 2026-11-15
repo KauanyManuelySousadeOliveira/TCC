@@ -1,0 +1,11 @@
+<div class="page-head"><div><h1>Médicos</h1></div></div>
+<div class="grid2" style="align-items:start"><div class="card"><table class="table"><thead><tr><th>Nome</th><th>Especialidade</th><th>CRM</th><th></th></tr></thead><tbody>
+<?php foreach ($lista as $m): ?><tr><td><?= e($m['nome']) ?><?= $m['ativo'] ? '' : ' <span class="badge badge-faltou">Inativo</span>' ?></td><td><?= e($m['especialidade']) ?></td><td class="mono"><?= e($m['crm']) ?></td>
+<td><form method="post" action="/recepcao/medicos/<?= (int)$m['id'] ?>/ativo"><?= csrf_field() ?><input type="hidden" name="ativo" value="<?= $m['ativo'] ? 0 : 1 ?>"><button class="btn btn-ghost btn-sm"><?= $m['ativo'] ? 'Inativar' : 'Reativar' ?></button></form></td></tr><?php endforeach; ?></tbody></table></div>
+<div><form class="card pad" method="post" action="/recepcao/medicos"><?= csrf_field() ?><div class="section-title">Novo médico</div>
+<?php foreach ($erros as $er): ?><div class="alert alert-err"><?= e($er) ?></div><?php endforeach; ?>
+<div class="field"><label>Nome (ex.: Dr. Fulano de Tal)</label><input name="nome" required value="<?= e($v['nome'] ?? '') ?>"></div>
+<div class="field"><label>Especialidade</label><select name="especialidade_id"><?php foreach ($especialidades as $e_): ?><option value="<?= (int)$e_['id'] ?>" <?= ($v['especialidade_id'] ?? '') == $e_['id'] ? 'selected' : '' ?>><?= e($e_['nome']) ?></option><?php endforeach; ?></select></div>
+<div class="grid2"><div class="field"><label>CRM</label><input name="crm" placeholder="CRM 12345-SP" required value="<?= e($v['crm'] ?? '') ?>"></div><div class="field"><label>E-mail</label><input type="email" name="email" required value="<?= e($v['email'] ?? '') ?>"></div></div>
+<div class="field"><label>Senha inicial (mín. 8)</label><input type="password" name="senha" minlength="8" required></div><button class="btn btn-primary">Cadastrar médico</button></form>
+<form class="card pad" method="post" action="/recepcao/especialidades" style="margin-top:14px"><?= csrf_field() ?><div class="section-title">Nova especialidade</div><div class="field"><input name="nome" required placeholder="Ex.: Oftalmologia"></div><button class="btn btn-secondary">Adicionar</button></form></div></div>

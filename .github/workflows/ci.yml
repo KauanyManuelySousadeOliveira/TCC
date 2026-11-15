@@ -1,0 +1,11 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: mbstring, pdo_sqlite }
+      - run: for f in $(find app public views database -name '*.php'); do php -l $f; done
+      - run: bash tests/smoke.sh

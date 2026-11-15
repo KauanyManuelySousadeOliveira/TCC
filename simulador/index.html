@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vívere SGC — Simulador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pine:#1F3B2D;
+  --pine-deep:#132821;
+  --cream:#FAF7F0;
+  --sage:#E3EAE0;
+  --sage-line:#CBD8C6;
+  --gold:#B08D4F;
+  --gold-soft:#E9DCC0;
+  --ink:#20261F;
+  --ink-soft:#5B6459;
+  --terracotta:#B5533C;
+  --terracotta-soft:#F1DDD6;
+  --ok:#3F7A56;
+  --ok-soft:#DCEBE1;
+  --radius:10px;
+  --shadow:0 2px 10px rgba(19,40,33,.06), 0 1px 2px rgba(19,40,33,.08);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--cream);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Fraunces',serif; color:var(--pine-deep); margin:0; letter-spacing:-0.01em;}
+button{font-family:inherit; cursor:pointer;}
+input,select,textarea{font-family:inherit; font-size:14px;}
+a{color:inherit;}
+::selection{background:var(--gold-soft);}
+:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+/* ---------- utility atoms ---------- */
+.btn{
+  border:1px solid transparent; border-radius:8px; padding:9px 16px;
+  font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;
+  transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--pine); color:#fff;}
+.btn-primary:hover{background:var(--pine-deep);}
+.btn-secondary{background:#fff; color:var(--pine); border-color:var(--sage-line);}
+.btn-secondary:hover{border-color:var(--pine);}
+.btn-ghost{background:transparent; color:var(--ink-soft); border-color:transparent;}
+.btn-ghost:hover{background:var(--sage);}
+.btn-danger{background:#fff; color:var(--terracotta); border-color:var(--terracotta-soft);}
+.btn-danger:hover{background:var(--terracotta-soft);}
+.btn-sm{padding:6px 11px; font-size:13px; border-radius:7px;}
+.btn:disabled{opacity:.45; cursor:not-allowed;}
+
+.card{background:#fff; border:1px solid var(--sage-line); border-radius:var(--radius); box-shadow:var(--shadow);}
+.pad{padding:22px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em;}
+.field input,.field select,.field textarea{
+  width:100%; padding:9px 11px; border:1px solid var(--sage-line); border-radius:7px; background:#fefdfb; color:var(--ink);
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:100px; white-space:nowrap;}
+.badge-agendada{background:var(--sage); color:var(--pine-deep);}
+.badge-confirmada{background:var(--ok-soft); color:var(--ok);}
+.badge-cancelada{background:var(--terracotta-soft); color:var(--terracotta); text-decoration:line-through;}
+.badge-realizada{background:var(--gold-soft); color:#7A5F28;}
+.badge-faltou{background:#EDEBE6; color:#7C7568;}
+
+.table{width:100%; border-collapse:collapse;}
+.table th{text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); padding:9px 12px; border-bottom:2px solid var(--sage-line);}
+.table td{padding:11px 12px; border-bottom:1px solid var(--sage);vertical-align:middle;}
+.table tr:hover td{background:#FBFAF6;}
+.mono{font-family:'IBM Plex Mono',monospace; font-size:13px;}
+.muted{color:var(--ink-soft);}
+.empty{padding:36px 20px; text-align:center; color:var(--ink-soft);}
+.empty .em-title{font-family:'Fraunces',serif; font-size:18px; color:var(--pine-deep); margin-bottom:4px;}
+
+/* ---------- pulse signature ---------- */
+.pulse-wrap{width:54px; height:24px; overflow:hidden; flex-shrink:0;}
+.pulse-wrap svg{width:100%; height:100%;}
+.pulse-line{fill:none; stroke:var(--gold); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
+  stroke-dasharray:120; stroke-dashoffset:0; animation:travel 2.6s linear infinite;}
+@keyframes travel{ to { stroke-dashoffset:-240; } }
+.pulse-burst{position:fixed; inset:0; pointer-events:none; display:flex; align-items:flex-start; justify-content:center; z-index:60;}
+.pulse-burst svg{width:180px; height:60px; margin-top:18px; opacity:0; }
+.pulse-burst.show svg{animation:burst .9s ease-out forwards;}
+@keyframes burst{ 0%{opacity:0; transform:translateY(-6px) scale(.9);} 20%{opacity:1; transform:translateY(0) scale(1);} 80%{opacity:1;} 100%{opacity:0; transform:translateY(4px) scale(1.02);} }
+
+/* ---------- shell layout ---------- */
+#app{min-height:100vh; display:flex; flex-direction:column;}
+.demo-banner{background:var(--pine-deep); color:var(--gold-soft); font-size:12.5px; text-align:center; padding:6px 12px;}
+.demo-banner b{color:#fff;}
+
+.topbar{background:var(--pine); color:#fff; padding:12px 22px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,.12); position:sticky; top:0; z-index:20;}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-name{font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:#fff;}
+.brand-tag{font-size:11px; color:var(--gold-soft); letter-spacing:.05em; text-transform:uppercase; margin-top:-2px;}
+.topbar-spacer{flex:1;}
+.user-chip{display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.08); padding:5px 12px 5px 5px; border-radius:100px;}
+.avatar{width:30px; height:30px; border-radius:100px; background:var(--gold); color:var(--pine-deep); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0;}
+.user-chip .who{line-height:1.2;}
+.user-chip .who .name{font-size:13px; font-weight:600;}
+.user-chip .who .role{font-size:11px; color:var(--gold-soft);}
+
+.body-wrap{flex:1; display:flex; width:100%; max-width:1360px; margin:0 auto;}
+.sidebar{width:220px; flex-shrink:0; padding:20px 12px; border-right:1px solid var(--sage-line);}
+.nav-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; font-size:14px; font-weight:500; color:var(--ink-soft); margin-bottom:2px;}
+.nav-item:hover{background:var(--sage); color:var(--pine-deep);}
+.nav-item.active{background:var(--pine); color:#fff;}
+.nav-item .ic{width:18px; text-align:center; font-size:15px;}
+.reset-row{margin-top:18px; padding-top:14px; border-top:1px solid var(--sage-line);}
+
+.content{flex:1; padding:26px 30px 60px; min-width:0;}
+.page-head{display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-bottom:20px; flex-wrap:wrap;}
+.page-head h1{font-size:26px;}
+.page-head p{margin:4px 0 0; color:var(--ink-soft); font-size:14px;}
+.section-title{font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--pine-deep); margin:26px 0 10px;}
+.section-title:first-child{margin-top:0;}
+
+.stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px;}
+.stat-card{padding:16px 18px;}
+.stat-num{font-family:'Fraunces',serif; font-size:28px; color:var(--pine-deep); font-weight:600;}
+.stat-label{font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-top:2px;}
+
+.toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--pine-deep); color:#fff; padding:12px 20px; border-radius:9px; font-size:14px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:flex; align-items:center; gap:10px; z-index:70; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* ---------- login screen ---------- */
+.login-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 20px; background:
+  radial-gradient(circle at 15% 10%, rgba(176,141,79,.10), transparent 45%),
+  radial-gradient(circle at 85% 90%, rgba(31,59,45,.08), transparent 45%), var(--cream);}
+.login-box{width:100%; max-width:920px;}
+.login-hero{text-align:center; margin-bottom:34px;}
+.login-hero .brand-name{color:var(--pine-deep); font-size:30px; justify-content:center;}
+.login-hero .brand-tag{color:var(--gold); font-size:12px;}
+.login-hero p{color:var(--ink-soft); margin-top:12px; max-width:520px; margin-left:auto; margin-right:auto;}
+.role-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+.role-card{padding:26px 22px; text-align:left; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;}
+.role-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(19,40,33,.12); border-color:var(--gold);}
+.role-card .ic{width:44px; height:44px; border-radius:10px; background:var(--sage); display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:14px;}
+.role-card h3{font-size:18px; margin-bottom:4px;}
+.role-card .persona{font-size:13px; color:var(--ink-soft); margin-bottom:10px;}
+.role-card .desc{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+.role-card .enter{margin-top:16px; font-size:13px; font-weight:700; color:var(--pine); display:flex; align-items:center; gap:5px;}
+
+/* booking stepper */
+.stepper{display:flex; gap:8px; margin-bottom:22px;}
+.step-pill{flex:1; text-align:center; font-size:12px; font-weight:600; padding:8px 6px; border-radius:7px; background:var(--sage); color:var(--ink-soft);}
+.step-pill.active{background:var(--pine); color:#fff;}
+.step-pill.done{background:var(--ok-soft); color:var(--ok);}
+.pick-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px;}
+.pick-card{padding:14px; border:1px solid var(--sage-line); border-radius:9px; cursor:pointer; background:#fff;}
+.pick-card:hover{border-color:var(--gold);}
+.pick-card.selected{border-color:var(--pine); background:var(--sage); box-shadow:inset 0 0 0 1px var(--pine);}
+.slot-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(78px,1fr)); gap:8px;}
+.slot{padding:9px 4px; text-align:center; border:1px solid var(--sage-line); border-radius:7px; font-size:13px; font-family:'IBM Plex Mono',monospace; cursor:pointer; background:#fff;}
+.slot:hover{border-color:var(--gold);}
+.slot.selected{background:var(--pine); color:#fff; border-color:var(--pine);}
+.slot.taken{background:#F1EFE9; color:#B7B1A2; text-decoration:line-through; cursor:not-allowed;}
+.slot.blocked{background:#F1EFE9; color:#B7B1A2; cursor:not-allowed;}
+
+.record-entry{border-left:3px solid var(--gold); padding:10px 0 10px 16px; margin-bottom:14px;}
+.record-entry .re-date{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+.record-entry .re-doc{font-size:13px; font-weight:600; color:var(--pine-deep); margin:2px 0 6px;}
+
+.patient-list-item{display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; cursor:pointer;}
+.patient-list-item:hover{background:var(--sage);}
+.patient-list-item.active{background:var(--pine); color:#fff;}
+.patient-list-item.active .muted{color:var(--gold-soft);}
+
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px;}
+.bar-track{flex:1; height:9px; background:var(--sage); border-radius:100px; overflow:hidden;}
+.bar-fill{height:100%; background:linear-gradient(90deg, var(--pine), var(--gold));}
+
+@media (max-width: 880px){
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .role-grid{grid-template-columns:1fr;}
+  .body-wrap{flex-direction:column;}
+  .sidebar{width:100%; display:flex; overflow-x:auto; gap:4px; padding:10px 12px; border-right:none; border-bottom:1px solid var(--sage-line);}
+  .nav-item{flex-shrink:0;}
+  .reset-row{display:none;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="pulse-burst" id="pulseBurst">
+  <svg viewBox="0 0 180 60"><polyline points="0,30 35,30 45,10 55,50 65,18 75,30 180,30" fill="none" stroke="#B08D4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   VÍVERE SGC — SIMULADOR (dados fictícios, tudo em memória)
+   ========================================================= */
+
+const PULSE_SVG = `<svg viewBox="0 0 120 24"><polyline class="pulse-line" points="0,12 22,12 28,3 34,21 40,12 46,12 120,12"/></svg>`;
+
+let SEQ = 1000;
+const uid = (p) => p + (SEQ++);
+
+function seedData(){
+  const specialties = ["Clínica Geral","Cardiologia","Dermatologia","Ginecologia","Ortopedia","Pediatria","Psiquiatria"];
+
+  const doctors = [
+    {id:"d1", name:"Dr. Rafael Menezes", specialty:"Cardiologia", crm:"CRM 45213-SP", initials:"RM"},
+    {id:"d2", name:"Dra. Beatriz Andrade", specialty:"Dermatologia", crm:"CRM 51890-SP", initials:"BA"},
+    {id:"d3", name:"Dr. Henrique Cordeiro", specialty:"Clínica Geral", crm:"CRM 38221-SP", initials:"HC"},
+    {id:"d4", name:"Dra. Marina Lopes", specialty:"Ginecologia", crm:"CRM 44710-SP", initials:"ML"},
+    {id:"d5", name:"Dr. Otávio Ferraz", specialty:"Ortopedia", crm:"CRM 39987-SP", initials:"OF"},
+    {id:"d6", name:"Dra. Sofia Nakamura", specialty:"Pediatria", crm:"CRM 52276-SP", initials:"SN"},
+  ];
+
+  const patients = [
+    {id:"p1", name:"Ana Beatriz Souza", cpf:"321.664.981-05", phone:"(11) 98221-4457", email:"ana.souza@email.com", birth:"14/03/1994"},
+    {id:"p2", name:"João Pedro Lima", cpf:"115.772.340-88", phone:"(11) 97744-1120", email:"joaopedro.lima@email.com", birth:"02/11/1987"},
+    {id:"p3", name:"Camila Duarte", cpf:"402.118.665-30", phone:"(11) 96650-8832", email:"camila.duarte@email.com", birth:"22/07/1999"},
+    {id:"p4", name:"Fernando Rocha", cpf:"250.994.117-52", phone:"(11) 95521-6674", email:"f.rocha@email.com", birth:"09/01/1979"},
+    {id:"p5", name:"Larissa Prado", cpf:"188.336.552-19", phone:"(11) 99110-3345", email:"larissa.prado@email.com", birth:"30/05/2001"},
+    {id:"p6", name:"Eduardo Vasconcelos", cpf:"377.660.229-04", phone:"(11) 98899-7712", email:"e.vasconcelos@email.com", birth:"17/09/1966"},
+  ];
+
+  const appointments = [
+    {id:"a1", patientId:"p1", doctorId:"d1", date:"2026-08-07", time:"09:00", status:"confirmada"},
+    {id:"a2", patientId:"p1", doctorId:"d3", date:"2026-07-18", time:"14:30", status:"realizada"},
+    {id:"a3", patientId:"p1", doctorId:"d2", date:"2026-06-02", time:"10:00", status:"realizada"},
+    {id:"a4", patientId:"p2", doctorId:"d1", date:"2026-08-05", time:"10:30", status:"agendada"},
+    {id:"a5", patientId:"p3", doctorId:"d1", date:"2026-08-05", time:"11:00", status:"confirmada"},
+    {id:"a6", patientId:"p4", doctorId:"d1", date:"2026-08-05", time:"15:30", status:"agendada"},
+    {id:"a7", patientId:"p5", doctorId:"d5", date:"2026-08-06", time:"09:30", status:"agendada"},
+    {id:"a8", patientId:"p6", doctorId:"d1", date:"2026-07-22", time:"08:30", status:"faltou"},
+    {id:"a9", patientId:"p2", doctorId:"d4", date:"2026-08-11", time:"13:30", status:"agendada"},
+    {id:"a10", patientId:"p3", doctorId:"d6", date:"2026-08-09", time:"16:00", status:"confirmada"},
+    {id:"a11", patientId:"p1", doctorId:"d1", date:"2026-05-14", time:"09:00", status:"cancelada"},
+  ];
+
+  const records = {
+    p1:[
+      {id:uid("r"), date:"18/07/2026", doctor:"Dr. Henrique Cordeiro", queixa:"Check-up de rotina, sem queixas.", evolucao:"Exame físico normal. Solicitados exames laboratoriais de rotina. Retorno em 6 meses."},
+      {id:uid("r"), date:"02/06/2026", doctor:"Dra. Beatriz Andrade", queixa:"Lesão avermelhada no antebraço.", evolucao:"Diagnóstico de dermatite de contato. Prescrito corticoide tópico por 7 dias."},
+    ],
+    p2:[
+      {id:uid("r"), date:"30/04/2026", doctor:"Dr. Rafael Menezes", queixa:"Palpitações ocasionais.", evolucao:"ECG sem alterações. Solicitado holter 24h para investigação."},
+    ],
+    p6:[
+      {id:uid("r"), date:"22/07/2026", doctor:"Dr. Rafael Menezes", queixa:"Não compareceu à consulta.", evolucao:"Paciente faltou. Contato realizado para reagendamento."},
+    ],
+  };
+
+  const blocked = {}; // blocked[doctorId][date] = Set(times)
+
+  return {specialties, doctors, patients, appointments, records, blocked};
+}
+
+let DATA = seedData();
+
+const STATE = {
+  role: null,        // 'paciente' | 'medico' | 'recepcionista'
+  userId: null,
+  screen: 'home',
+  booking: {step:1, specialty:null, doctorId:null, date:null, time:null, mode:'novo', editingId:null},
+  selectedPatientId: null,
+  recordDraft: {queixa:'', evolucao:''},
+  agendaFilterDoctor: 'all',
+  agendaFilterDate: null,
+  newPatientDraft: {},
+  newDoctorDraft: {},
+};
+
+const TODAY = "2026-08-05";
+
+/* ---------- helpers ---------- */
+function fmtDate(iso){
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+function weekdayShort(iso){
+  const days=["dom","seg","ter","qua","qui","sex","sáb"];
+  return days[new Date(iso+"T12:00:00").getDay()];
+}
+function doctorById(id){ return DATA.doctors.find(d=>d.id===id); }
+function patientById(id){ return DATA.patients.find(p=>p.id===id); }
+function initials(name){ return name.replace(/^(Dr\.|Dra\.)\s*/,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function statusBadge(s){
+  const map={agendada:"Agendada", confirmada:"Confirmada", cancelada:"Cancelada", realizada:"Realizada", faltou:"Não compareceu"};
+  return `<span class="badge badge-${s}">${map[s]||s}</span>`;
+}
+function currentUser(){
+  if(STATE.role==='paciente') return patientById(STATE.userId);
+  if(STATE.role==='medico') return doctorById(STATE.userId);
+  if(STATE.role==='recepcionista') return {id:'rec1', name:'Carla Nogueira', initials:'CN'};
+  return null;
+}
+function roleLabel(r){ return {paciente:'Paciente', medico:'Médico', recepcionista:'Recepcionista'}[r]||''; }
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>t.classList.remove('show'), 2600);
+  const burst=document.getElementById('pulseBurst');
+  burst.classList.remove('show'); void burst.offsetWidth; burst.classList.add('show');
+}
+
+const TIME_SLOTS = (()=>{
+  const out=[];
+  for(let h=8; h<18; h++){
+    if(h===12) continue; // almoço
+    out.push(String(h).padStart(2,'0')+':00');
+    out.push(String(h).padStart(2,'0')+':30');
+  }
+  return out;
+})();
+
+function nextDays(n){
+  const out=[]; const base=new Date(TODAY+"T12:00:00");
+  for(let i=0;i<n;i++){ const d=new Date(base); d.setDate(base.getDate()+i); out.push(d.toISOString().slice(0,10)); }
+  return out;
+}
+
+function isSlotTaken(doctorId, date, time, ignoreId){
+  return DATA.appointments.some(a => a.doctorId===doctorId && a.date===date && a.time===time && a.status!=='cancelada' && a.id!==ignoreId);
+}
+function isSlotBlocked(doctorId, date, time){
+  return !!(DATA.blocked[doctorId] && DATA.blocked[doctorId][date] && DATA.blocked[doctorId][date].has(time));
+}
+
+/* ---------- render root ---------- */
+function render(){
+  const app = document.getElementById('app');
+  if(!STATE.role){ app.innerHTML = renderLogin(); bindLogin(); return; }
+  app.innerHTML = renderShell();
+  bindShell();
+}
+
+/* ---------- LOGIN ---------- */
+function renderLogin(){
+  return `
+  <div class="login-screen">
+    <div class="login-box">
+      <div class="login-hero">
+        <div class="brand-name" style="display:flex;align-items:center;gap:10px;">
+          <div class="pulse-wrap">${PULSE_SVG}</div> Vívere SGC
+        </div>
+        <div class="brand-tag">Simulador do sistema — Clínica Vívere</div>
+        <p>Escolha um perfil para explorar a plataforma com dados fictícios. Tudo aqui é simulado — nenhum dado real de paciente é usado, e nada é salvo de verdade.</p>
+      </div>
+      <div class="role-grid">
+        <div class="card role-card" data-action="login" data-role="paciente">
+          <div class="ic">🧑</div>
+          <h3>Paciente</h3>
+          <div class="persona">Entrar como Ana Beatriz Souza</div>
+          <div class="desc">Agende, remarque e cancele consultas, veja seu histórico e atualize seus dados.</div>
+          <div class="enter">Entrar como paciente →</div>
+        </div>
+        <div class="card role-card" data-action="login" data-role="medico">
+          <div class="ic">🩺</div>
+          <h3>Médico</h3>
+          <div class="persona">Entrar como Dr. Rafael Menezes</div>
+          <div class="desc">Veja sua agenda, gerencie pacientes e registre evolução clínica em prontuários.</div>
+          <div class="enter">Entrar como médico →</div>
+        </div>
+        <div class="card role-card" data-action="login" data-role="recepcionista">
+          <div class="ic">🗂️</div>
+          <h3>Recepcionista</h3>
+          <div class="persona">Entrar como Carla Nogueira</div>
+          <div class="desc">Controle a agenda de todos os médicos, cadastre pacientes e emita relatórios.</div>
+          <div class="enter">Entrar como recepcionista →</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function bindLogin(){
+  document.querySelectorAll('[data-action="login"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const role = el.dataset.role;
+      STATE.role = role;
+      STATE.userId = role==='paciente' ? 'p1' : role==='medico' ? 'd1' : null;
+      STATE.screen = 'home';
+      render();
+    });
+  });
+}
+
+/* ---------- SHELL ---------- */
+function navItemsFor(role){
+  if(role==='paciente') return [
+    ['home','🏠','Início'],
+    ['agendar','➕','Agendar consulta'],
+    ['consultas','📅','Minhas consultas'],
+    ['historico','🕘','Histórico'],
+    ['perfil','👤','Meus dados'],
+  ];
+  if(role==='medico') return [
+    ['home','🏠','Início'],
+    ['agenda-medico','📅','Minha agenda'],
+    ['pacientes-medico','🧑‍🤝‍🧑','Meus pacientes'],
+  ];
+  return [
+    ['home','🏠','Início'],
+    ['agenda-geral','📅','Agenda geral'],
+    ['pacientes-rec','🧑‍🤝‍🧑','Pacientes'],
+    ['medicos-rec','🩺','Médicos'],
+    ['relatorios','📊','Relatórios'],
+  ];
+}
+
+function renderShell(){
+  const u = currentUser();
+  const nav = navItemsFor(STATE.role);
+  return `
+    <div class="demo-banner"><b>Modo demonstração</b> — dados fictícios, uso apenas para simulação. Nada aqui é salvo permanentemente.</div>
+    <div class="topbar">
+      <div class="brand">
+        <div class="pulse-wrap">${PULSE_SVG}</div>
+        <div>
+          <div class="brand-name">Vívere SGC</div>
+          <div class="brand-tag">Clínica Vívere</div>
+        </div>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="avatar">${u.initials || initials(u.name)}</div>
+        <div class="who">
+          <div class="name">${u.name}</div>
+          <div class="role">${roleLabel(STATE.role)}</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="color:#fff" data-action="logout">Sair</button>
+    </div>
+    <div class="body-wrap">
+      <div class="sidebar">
+        ${nav.map(([key,ic,label])=>`
+          <div class="nav-item ${STATE.screen===key?'active':''}" data-action="nav" data-screen="${key}">
+            <span class="ic">${ic}</span><span>${label}</span>
+          </div>`).join('')}
+        <div class="reset-row">
+          <button class="btn btn-secondary btn-sm" style="width:100%" data-action="reset">↺ Reiniciar dados</button>
+        </div>
+      </div>
+      <div class="content">${renderScreen()}</div>
+    </div>
+  `;
+}
+
+function renderScreen(){
+  if(STATE.role==='paciente'){
+    if(STATE.screen==='home') return patientHome();
+    if(STATE.screen==='agendar') return patientBook();
+    if(STATE.screen==='consultas') return patientAppointments();
+    if(STATE.screen==='historico') return patientHistory();
+    if(STATE.screen==='perfil') return patientProfile();
+  }
+  if(STATE.role==='medico'){
+    if(STATE.screen==='home') return doctorHome();
+    if(STATE.screen==='agenda-medico') return doctorAgenda();
+    if(STATE.screen==='pacientes-medico') return doctorPatients();
+    if(STATE.screen==='prontuario') return doctorRecord();
+  }
+  if(STATE.role==='recepcionista'){
+    if(STATE.screen==='home') return receptionHome();
+    if(STATE.screen==='agenda-geral') return receptionAgenda();
+    if(STATE.screen==='pacientes-rec') return receptionPatients();
+    if(STATE.screen==='medicos-rec') return receptionDoctors();
+    if(STATE.screen==='relatorios') return receptionReports();
+  }
+  return '';
+}
+
+/* ============ PACIENTE ============ */
+function patientHome(){
+  const u = currentUser();
+  const mine = DATA.appointments.filter(a=>a.patientId===u.id);
+  const upcoming = mine.filter(a=>a.date>=TODAY && a.status!=='cancelada').sort((a,b)=>a.date.localeCompare(b.date));
+  const done = mine.filter(a=>a.status==='realizada').length;
+  const next = upcoming[0];
+  return `
+    <div class="page-head">
+      <div><h1>Olá, ${u.name.split(' ')[0]}</h1><p>Este é o seu painel na Clínica Vívere.</p></div>
+      <button class="btn btn-primary" data-action="nav" data-screen="agendar">➕ Agendar consulta</button>
+    </div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">Próximas consultas</div></div>
+      <div class="card stat-card"><div class="stat-num">${done}</div><div class="stat-label">Consultas realizadas</div></div>
+      <div class="card stat-card"><div class="stat-num">${mine.filter(a=>a.status==='cancelada').length}</div><div class="stat-label">Canceladas</div></div>
+      <div class="card stat-card"><div class="stat-num">${DATA.doctors.length}</div><div class="stat-label">Médicos na clínica</div></div>
+    </div>
+    <div class="section-title">Sua próxima consulta</div>
+    ${ next ? `
+      <div class="card pad" style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+        <div class="avatar" style="width:46px;height:46px;font-size:16px;">${initials(doctorById(next.doctorId).name)}</div>
+        <div style="flex:1; min-width:200px;">
+          <div style="font-weight:600; font-size:15px;">${doctorById(next.doctorId).name} · ${doctorById(next.doctorId).specialty}</div>
+          <div class="muted mono">${fmtDate(next.date)} (${weekdayShort(next.date)}) às ${next.time}</div>
+        </div>
+        ${statusBadge(next.status)}
+        <button class="btn btn-secondary btn-sm" data-action="nav" data-screen="consultas">Ver todas</button>
+      </div>` : `<div class="card empty"><div class="em-title">Nenhuma consulta agendada</div>Que tal marcar a sua primeira consulta?</div>`}
+  `;
+}
+
+function patientBook(){
+  const b = STATE.booking;
+  let body = '';
+  if(b.step===1){
+    body = `
+      <div class="section-title">1. Escolha a especialidade</div>
+      <div class="pick-grid">
+        ${DATA.specialties.map(s=>`
+          <div class="pick-card ${b.specialty===s?'selected':''}" data-action="pick-specialty" data-value="${s}">
+            <div style="font-weight:600;">${s}</div>
+            <div class="muted" style="font-size:12.5px; margin-top:4px;">${DATA.doctors.filter(d=>d.specialty===s).length} médico(s)</div>
+          </div>`).join('')}
+      </div>`;
+  } else if(b.step===2){
+    const docs = DATA.doctors.filter(d=>d.specialty===b.specialty);
+    body = `
+      <div class="section-title">2. Escolha o médico — ${b.specialty}</div>
+      <div class="pick-grid">
+        ${docs.map(d=>`
+          <div class="pick-card ${b.doctorId===d.id?'selected':''}" data-action="pick-doctor" data-value="${d.id}">
+            <div class="avatar" style="margin-bottom:8px;">${d.initials}</div>
+            <div style="font-weight:600;">${d.name}</div>
+            <div class="muted" style="font-size:12.5px;">${d.crm}</div>
+          </div>`).join('')}
+      </div>`;
+  } else if(b.step===3){
+    const days = nextDays(10);
+    body = `
+      <div class="section-title">3. Escolha a data</div>
+      <div class="pick-grid">
+        ${days.map(dt=>`
+          <div class="pick-card ${b.date===dt?'selected':''}" data-action="pick-date" data-value="${dt}" style="text-align:center;">
+            <div style="font-size:12px; text-transform:uppercase; color:var(--ink-soft);">${weekdayShort(dt)}</div>
+            <div style="font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:var(--pine-deep);">${dt.slice(8,10)}/${dt.slice(5,7)}</div>
+          </div>`).join('')}
+      </div>`;
+  } else if(b.step===4){
+    body = `
+      <div class="section-title">4. Escolha o horário — ${fmtDate(b.date)}</div>
+      <div class="slot-grid">
+        ${TIME_SLOTS.map(t=>{
+          const taken = isSlotTaken(b.doctorId, b.date, t, b.editingId);
+          const blocked = isSlotBlocked(b.doctorId, b.date, t);
+          const cls = taken||blocked ? 'taken' : (b.time===t?'selected':'');
+          return `<div class="slot ${cls}" ${taken||blocked?'':`data-action="pick-time" data-value="${t}"`}>${t}</div>`;
+        }).join('')}
+      </div>`;
+  } else if(b.step===5){
+    const d = doctorById(b.doctorId);
+    body = `
+      <div class="section-title">5. Confirmar agendamento</div>
+      <div class="card pad" style="max-width:460px;">
+        <div class="field"><label>Especialidade</label><div>${b.specialty}</div></div>
+        <div class="field"><label>Médico</label><div>${d.name}</div></div>
+        <div class="field"><label>Data</label><div>${fmtDate(b.date)} (${weekdayShort(b.date)})</div></div>
+        <div class="field"><label>Horário</label><div class="mono">${b.time}</div></div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" data-action="confirm-booking">Confirmar agendamento</button>
+      </div>`;
+  }
+
+  const steps = ['Especialidade','Médico','Data','Horário','Confirmar'];
+  return `
+    <div class="page-head"><div><h1>Agendar consulta</h1><p>Siga as etapas para marcar seu horário.</p></div></div>
+    <div class="stepper">
+      ${steps.map((s,i)=>`<div class="step-pill ${b.step===i+1?'active':b.step>i+1?'done':''}">${i+1}. ${s}</div>`).join('')}
+    </div>
+    <div class="card pad">${body}</div>
+    <div style="margin-top:16px; display:flex; gap:10px;">
+      ${b.step>1 ? `<button class="btn btn-secondary" data-action="book-back">← Voltar</button>` : ''}
+    </div>
+  `;
+}
+
+function patientAppointments(){
+  const u = currentUser();
+  const mine = DATA.appointments.filter(a=>a.patientId===u.id && a.date>=TODAY && a.status!=='cancelada' && a.status!=='realizada').sort((a,b)=>a.date.localeCompare(b.date));
+  return `
+    <div class="page-head"><div><h1>Minhas consultas</h1><p>Consultas futuras e pendentes.</p></div>
+      <button class="btn btn-primary" data-action="nav" data-screen="agendar">➕ Nova consulta</button></div>
+    <div class="card">
+      ${mine.length===0 ? `<div class="empty"><div class="em-title">Nenhuma consulta futura</div>Agende uma nova consulta quando quiser.</div>` : `
+      <table class="table">
+        <thead><tr><th>Médico</th><th>Especialidade</th><th>Data</th><th>Horário</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${mine.map(a=>{
+            const d=doctorById(a.doctorId);
+            return `<tr>
+              <td>${d.name}</td><td>${d.specialty}</td><td class="mono">${fmtDate(a.date)}</td><td class="mono">${a.time}</td>
+              <td>${statusBadge(a.status)}</td>
+              <td style="text-align:right; white-space:nowrap;">
+                <button class="btn btn-secondary btn-sm" data-action="reschedule" data-id="${a.id}">Remarcar</button>
+                <button class="btn btn-danger btn-sm" data-action="cancel-appt" data-id="${a.id}">Cancelar</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function patientHistory(){
+  const u = currentUser();
+  const past = DATA.appointments.filter(a=>a.patientId===u.id && (a.status==='realizada'||a.status==='cancelada'||a.status==='faltou')).sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+    <div class="page-head"><div><h1>Histórico</h1><p>Consultas passadas, canceladas ou não realizadas.</p></div></div>
+    <div class="card">
+      ${past.length===0 ? `<div class="empty"><div class="em-title">Sem histórico ainda</div></div>` : `
+      <table class="table">
+        <thead><tr><th>Médico</th><th>Especialidade</th><th>Data</th><th>Status</th></tr></thead>
+        <tbody>
+          ${past.map(a=>{
+            const d=doctorById(a.doctorId);
+            return `<tr><td>${d.name}</td><td>${d.specialty}</td><td class="mono">${fmtDate(a.date)}</td><td>${statusBadge(a.status)}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function patientProfile(){
+  const u = currentUser();
+  return `
+    <div class="page-head"><div><h1>Meus dados</h1><p>Atualize suas informações de contato.</p></div></div>
+    <div class="card pad" style="max-width:520px;">
+      <div class="grid2">
+        <div class="field"><label>Nome completo</label><input id="f-name" value="${u.name}"></div>
+        <div class="field"><label>CPF</label><input value="${u.cpf}" disabled></div>
+        <div class="field"><label>Telefone</label><input id="f-phone" value="${u.phone}"></div>
+        <div class="field"><label>E-mail</label><input id="f-email" value="${u.email}"></div>
+      </div>
+      <div class="field"><label>Data de nascimento</label><input value="${u.birth}" disabled></div>
+      <button class="btn btn-primary" data-action="save-profile">Salvar alterações</button>
+    </div>
+  `;
+}
+
+/* ============ MÉDICO ============ */
+function doctorHome(){
+  const u = currentUser();
+  const today = DATA.appointments.filter(a=>a.doctorId===u.id && a.date===TODAY && a.status!=='cancelada').sort((a,b)=>a.time.localeCompare(b.time));
+  const myPatients = new Set(DATA.appointments.filter(a=>a.doctorId===u.id).map(a=>a.patientId));
+  return `
+    <div class="page-head"><div><h1>Olá, ${u.name}</h1><p>${u.specialty} · ${u.crm}</p></div></div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-num">${today.length}</div><div class="stat-label">Consultas hoje</div></div>
+      <div class="card stat-card"><div class="stat-num">${myPatients.size}</div><div class="stat-label">Pacientes ativos</div></div>
+      <div class="card stat-card"><div class="stat-num">${DATA.appointments.filter(a=>a.doctorId===u.id && a.status==='realizada').length}</div><div class="stat-label">Atendimentos realizados</div></div>
+      <div class="card stat-card"><div class="stat-num">${today.filter(a=>a.status==='agendada').length}</div><div class="stat-label">Aguardando confirmação</div></div>
+    </div>
+    <div class="section-title">Agenda de hoje — ${fmtDate(TODAY)}</div>
+    <div class="card">
+      ${today.length===0 ? `<div class="empty"><div class="em-title">Nenhuma consulta hoje</div></div>` : `
+      <table class="table">
+        <thead><tr><th>Horário</th><th>Paciente</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${today.map(a=>{
+            const p=patientById(a.patientId);
+            return `<tr><td class="mono">${a.time}</td><td>${p.name}</td><td>${statusBadge(a.status)}</td>
+              <td style="text-align:right;"><button class="btn btn-secondary btn-sm" data-action="open-record" data-id="${p.id}">Ver prontuário</button></td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function doctorAgenda(){
+  const u = currentUser();
+  const days = nextDays(7);
+  const date = STATE.agendaFilterDate || TODAY;
+  const items = DATA.appointments.filter(a=>a.doctorId===u.id && a.date===date && a.status!=='cancelada').sort((a,b)=>a.time.localeCompare(b.time));
+  return `
+    <div class="page-head"><div><h1>Minha agenda</h1><p>Visualize e organize seus atendimentos.</p></div></div>
+    <div class="pick-grid" style="grid-template-columns:repeat(7,1fr); margin-bottom:20px;">
+      ${days.map(dt=>`
+        <div class="pick-card ${date===dt?'selected':''}" data-action="agenda-date" data-value="${dt}" style="text-align:center; padding:10px 4px;">
+          <div style="font-size:11px; text-transform:uppercase; color:var(--ink-soft);">${weekdayShort(dt)}</div>
+          <div style="font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--pine-deep);">${dt.slice(8,10)}/${dt.slice(5,7)}</div>
+        </div>`).join('')}
+    </div>
+    <div class="section-title">Horários — ${fmtDate(date)}</div>
+    <div class="card">
+      ${items.length===0 ? `<div class="empty"><div class="em-title">Nenhum atendimento nesta data</div></div>` : `
+      <table class="table">
+        <thead><tr><th>Horário</th><th>Paciente</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${items.map(a=>{
+            const p=patientById(a.patientId);
+            return `<tr><td class="mono">${a.time}</td><td>${p.name}</td><td>${statusBadge(a.status)}</td>
+              <td style="text-align:right;"><button class="btn btn-secondary btn-sm" data-action="open-record" data-id="${p.id}">Ver prontuário</button></td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>
+    <div class="section-title">Bloquear horário nesta data</div>
+    <div class="card pad">
+      <div class="slot-grid">
+        ${TIME_SLOTS.map(t=>{
+          const taken = isSlotTaken(u.id, date, t);
+          const blocked = isSlotBlocked(u.id, date, t);
+          const cls = taken?'taken':(blocked?'selected':'');
+          return `<div class="slot ${cls}" ${taken?'':`data-action="toggle-block" data-value="${t}" data-date="${date}"`} title="${taken?'Ocupado por agendamento':'Clique para bloquear/liberar'}">${t}</div>`;
+        }).join('')}
+      </div>
+      <p class="muted" style="margin-top:12px; font-size:12.5px;">Clique em um horário livre para bloqueá-lo (ex.: pausa, ausência). Clique novamente para liberar.</p>
+    </div>
+  `;
+}
+
+function doctorPatients(){
+  const u = currentUser();
+  const ids = [...new Set(DATA.appointments.filter(a=>a.doctorId===u.id).map(a=>a.patientId))];
+  return `
+    <div class="page-head"><div><h1>Meus pacientes</h1><p>Pacientes atendidos por você.</p></div></div>
+    <div class="card">
+      ${ids.map(id=>{
+        const p=patientById(id);
+        const count = DATA.appointments.filter(a=>a.doctorId===u.id && a.patientId===id).length;
+        return `<div class="patient-list-item" data-action="open-record" data-id="${id}" style="border-bottom:1px solid var(--sage);">
+          <div class="avatar">${initials(p.name)}</div>
+          <div style="flex:1;"><div style="font-weight:600;">${p.name}</div><div class="muted" style="font-size:12.5px;">${count} atendimento(s) · ${p.phone}</div></div>
+          <span style="color:var(--ink-soft);">→</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function doctorRecord(){
+  const p = patientById(STATE.selectedPatientId);
+  if(!p) return `<div class="empty"><div class="em-title">Selecione um paciente</div></div>`;
+  const entries = (DATA.records[p.id]||[]).slice().reverse();
+  return `
+    <div class="page-head">
+      <div><h1>Prontuário — ${p.name}</h1><p>${p.cpf} · Nascimento: ${p.birth} · ${p.phone}</p></div>
+      <button class="btn btn-secondary" data-action="nav" data-screen="agenda-medico">← Voltar à agenda</button>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="section-title">Novo registro de evolução</div>
+        <div class="card pad">
+          <div class="field"><label>Queixa / motivo</label><textarea id="f-queixa" rows="2" placeholder="Ex.: dor torácica leve aos esforços"></textarea></div>
+          <div class="field"><label>Evolução clínica</label><textarea id="f-evolucao" rows="4" placeholder="Descreva o exame, hipóteses e conduta"></textarea></div>
+          <button class="btn btn-primary" data-action="save-record" data-id="${p.id}">Salvar no prontuário</button>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Histórico do prontuário</div>
+        <div class="card pad">
+          ${entries.length===0 ? `<div class="empty" style="padding:20px;"><div class="em-title">Sem registros ainda</div></div>` :
+            entries.map(e=>`
+              <div class="record-entry">
+                <div class="re-date">${e.date}</div>
+                <div class="re-doc">${e.doctor}</div>
+                <div style="font-size:13.5px;"><b>Queixa:</b> ${e.queixa}</div>
+                <div style="font-size:13.5px; margin-top:4px;"><b>Evolução:</b> ${e.evolucao}</div>
+              </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============ RECEPCIONISTA ============ */
+function receptionHome(){
+  const today = DATA.appointments.filter(a=>a.date===TODAY && a.status!=='cancelada');
+  return `
+    <div class="page-head"><div><h1>Painel administrativo</h1><p>Visão geral da operação de hoje.</p></div></div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-num">${today.length}</div><div class="stat-label">Consultas hoje</div></div>
+      <div class="card stat-card"><div class="stat-num">${DATA.doctors.length}</div><div class="stat-label">Médicos ativos</div></div>
+      <div class="card stat-card"><div class="stat-num">${DATA.patients.length}</div><div class="stat-label">Pacientes cadastrados</div></div>
+      <div class="card stat-card"><div class="stat-num">${DATA.appointments.filter(a=>a.status==='agendada').length}</div><div class="stat-label">Aguardando confirmação</div></div>
+    </div>
+    <div class="section-title">Consultas de hoje — todos os médicos</div>
+    <div class="card">
+      ${today.length===0 ? `<div class="empty"><div class="em-title">Nenhuma consulta hoje</div></div>` : `
+      <table class="table">
+        <thead><tr><th>Horário</th><th>Paciente</th><th>Médico</th><th>Status</th></tr></thead>
+        <tbody>
+          ${today.sort((a,b)=>a.time.localeCompare(b.time)).map(a=>`
+            <tr><td class="mono">${a.time}</td><td>${patientById(a.patientId).name}</td><td>${doctorById(a.doctorId).name}</td><td>${statusBadge(a.status)}</td></tr>
+          `).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+function receptionAgenda(){
+  const df = STATE.agendaFilterDoctor;
+  const dd = STATE.agendaFilterDate || TODAY;
+  const days = nextDays(7);
+  let items = DATA.appointments.filter(a=>a.date===dd && a.status!=='cancelada');
+  if(df!=='all') items = items.filter(a=>a.doctorId===df);
+  items.sort((a,b)=>a.time.localeCompare(b.time));
+  return `
+    <div class="page-head"><div><h1>Agenda geral</h1><p>Controle a agenda de todos os médicos da clínica.</p></div></div>
+    <div class="grid2" style="margin-bottom:16px;">
+      <div class="field"><label>Médico</label>
+        <select data-action="filter-doctor">
+          <option value="all" ${df==='all'?'selected':''}>Todos os médicos</option>
+          ${DATA.doctors.map(d=>`<option value="${d.id}" ${df===d.id?'selected':''}>${d.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Data</label>
+        <select data-action="filter-date">
+          ${days.map(dt=>`<option value="${dt}" ${dd===dt?'selected':''}>${fmtDate(dt)} (${weekdayShort(dt)})</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      ${items.length===0 ? `<div class="empty"><div class="em-title">Nenhuma consulta encontrada</div></div>` : `
+      <table class="table">
+        <thead><tr><th>Horário</th><th>Paciente</th><th>Médico</th><th>Especialidade</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${items.map(a=>{
+            const d=doctorById(a.doctorId), p=patientById(a.patientId);
+            return `<tr><td class="mono">${a.time}</td><td>${p.name}</td><td>${d.name}</td><td>${d.specialty}</td><td>${statusBadge(a.status)}</td>
+              <td style="text-align:right;"><button class="btn btn-danger btn-sm" data-action="cancel-appt" data-id="${a.id}">Cancelar</button></td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>
+    <div class="section-title">Agendar nova consulta</div>
+    <div class="card pad" style="max-width:640px;">
+      <div class="grid2">
+        <div class="field"><label>Paciente</label>
+          <select id="rq-patient">${DATA.patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Médico</label>
+          <select id="rq-doctor">${DATA.doctors.map(d=>`<option value="${d.id}">${d.name} — ${d.specialty}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Data</label>
+          <select id="rq-date">${nextDays(10).map(dt=>`<option value="${dt}">${fmtDate(dt)} (${weekdayShort(dt)})</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Horário</label>
+          <select id="rq-time">${TIME_SLOTS.map(t=>`<option value="${t}">${t}</option>`).join('')}</select>
+        </div>
+      </div>
+      <button class="btn btn-primary" data-action="quick-book">Agendar consulta</button>
+    </div>
+  `;
+}
+
+function receptionPatients(){
+  return `
+    <div class="page-head"><div><h1>Pacientes</h1><p>Cadastro de pacientes da clínica.</p></div></div>
+    <div class="grid2">
+      <div class="card">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th></tr></thead>
+          <tbody>
+            ${DATA.patients.map(p=>`<tr><td>${p.name}</td><td class="mono">${p.cpf}</td><td>${p.phone}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="section-title">Novo paciente</div>
+        <div class="card pad">
+          <div class="field"><label>Nome completo</label><input id="np-name" placeholder="Nome do paciente"></div>
+          <div class="field"><label>CPF</label><input id="np-cpf" placeholder="000.000.000-00"></div>
+          <div class="field"><label>Telefone</label><input id="np-phone" placeholder="(11) 90000-0000"></div>
+          <div class="field"><label>E-mail</label><input id="np-email" placeholder="email@exemplo.com"></div>
+          <button class="btn btn-primary" data-action="add-patient">Cadastrar paciente</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function receptionDoctors(){
+  return `
+    <div class="page-head"><div><h1>Médicos</h1><p>Corpo clínico da Clínica Vívere.</p></div></div>
+    <div class="grid2">
+      <div class="card">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Especialidade</th><th>CRM</th></tr></thead>
+          <tbody>
+            ${DATA.doctors.map(d=>`<tr><td>${d.name}</td><td>${d.specialty}</td><td class="mono">${d.crm}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="section-title">Novo médico</div>
+        <div class="card pad">
+          <div class="field"><label>Nome completo</label><input id="nd-name" placeholder="Dr(a). Nome Sobrenome"></div>
+          <div class="field"><label>Especialidade</label>
+            <select id="nd-specialty">${DATA.specialties.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>CRM</label><input id="nd-crm" placeholder="CRM 00000-SP"></div>
+          <button class="btn btn-primary" data-action="add-doctor">Cadastrar médico</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function receptionReports(){
+  const all = DATA.appointments;
+  const total = all.length;
+  const bySpecialty = {};
+  DATA.specialties.forEach(s=>bySpecialty[s]=0);
+  all.forEach(a=>{ const d=doctorById(a.doctorId); if(d) bySpecialty[d.specialty]=(bySpecialty[d.specialty]||0)+1; });
+  const realizadas = all.filter(a=>a.status==='realizada').length;
+  const canceladas = all.filter(a=>a.status==='cancelada').length;
+  const faltas = all.filter(a=>a.status==='faltou').length;
+  const taxa = total ? Math.round((realizadas/total)*100) : 0;
+  const maxSpec = Math.max(1, ...Object.values(bySpecialty));
+  return `
+    <div class="page-head"><div><h1>Relatórios</h1><p>Indicadores simples de atendimento da clínica.</p></div></div>
+    <div class="stat-row">
+      <div class="card stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total de consultas</div></div>
+      <div class="card stat-card"><div class="stat-num">${realizadas}</div><div class="stat-label">Realizadas</div></div>
+      <div class="card stat-card"><div class="stat-num">${canceladas+faltas}</div><div class="stat-label">Canceladas / faltas</div></div>
+      <div class="card stat-card"><div class="stat-num">${taxa}%</div><div class="stat-label">Taxa de realização</div></div>
+    </div>
+    <div class="section-title">Consultas por especialidade</div>
+    <div class="card pad">
+      ${Object.entries(bySpecialty).map(([s,c])=>`
+        <div class="bar-row">
+          <div style="width:130px; flex-shrink:0;">${s}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(c/maxSpec)*100}%"></div></div>
+          <div style="width:24px; text-align:right;" class="mono">${c}</div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+/* ---------- actions ---------- */
+function bindShell(){
+  document.querySelectorAll('[data-action]').forEach(el=>{
+    const evt = (el.tagName==='SELECT') ? 'change' : 'click';
+    el.addEventListener(evt, (e)=>handleAction(el, e));
+  });
+}
+
+function handleAction(el){
+  const action = el.dataset.action;
+  switch(action){
+    case 'logout':
+      STATE.role=null; STATE.userId=null; STATE.screen='home';
+      STATE.booking={step:1, specialty:null, doctorId:null, date:null, time:null, mode:'novo', editingId:null};
+      render(); return;
+    case 'reset':
+      DATA = seedData();
+      showToast('Dados de demonstração reiniciados.');
+      render(); return;
+    case 'nav':
+      STATE.screen = el.dataset.screen;
+      if(STATE.screen==='agendar') STATE.booking={step:1, specialty:null, doctorId:null, date:null, time:null, mode:'novo', editingId:null};
+      render(); return;
+
+    // booking flow
+    case 'pick-specialty': STATE.booking.specialty=el.dataset.value; STATE.booking.doctorId=null; STATE.booking.step=2; render(); return;
+    case 'pick-doctor': STATE.booking.doctorId=el.dataset.value; STATE.booking.step=3; render(); return;
+    case 'pick-date': STATE.booking.date=el.dataset.value; STATE.booking.time=null; STATE.booking.step=4; render(); return;
+    case 'pick-time': STATE.booking.time=el.dataset.value; STATE.booking.step=5; render(); return;
+    case 'book-back': STATE.booking.step=Math.max(1, STATE.booking.step-1); render(); return;
+    case 'confirm-booking': {
+      const b = STATE.booking;
+      if(b.mode==='editar' && b.editingId){
+        const appt = DATA.appointments.find(a=>a.id===b.editingId);
+        appt.date=b.date; appt.time=b.time; appt.status='agendada';
+        showToast('Consulta remarcada com sucesso.');
+      } else {
+        DATA.appointments.push({id:uid('a'), patientId:currentUser().id, doctorId:b.doctorId, date:b.date, time:b.time, status:'agendada'});
+        showToast('Consulta agendada com sucesso.');
+      }
+      STATE.screen='consultas'; render(); return;
+    }
+    case 'reschedule': {
+      const appt = DATA.appointments.find(a=>a.id===el.dataset.id);
+      STATE.booking = {step:3, specialty:doctorById(appt.doctorId).specialty, doctorId:appt.doctorId, date:appt.date, time:null, mode:'editar', editingId:appt.id};
+      STATE.screen='agendar'; render(); return;
+    }
+    case 'cancel-appt': {
+      const appt = DATA.appointments.find(a=>a.id===el.dataset.id);
+      appt.status='cancelada';
+      showToast('Consulta cancelada.');
+      render(); return;
+    }
+    case 'save-profile': {
+      const u = currentUser();
+      u.name = document.getElementById('f-name').value || u.name;
+      u.phone = document.getElementById('f-phone').value || u.phone;
+      u.email = document.getElementById('f-email').value || u.email;
+      showToast('Dados atualizados.');
+      render(); return;
+    }
+
+    // doctor
+    case 'open-record': STATE.selectedPatientId = el.dataset.id; STATE.screen='prontuario'; render(); return;
+    case 'save-record': {
+      const pid = el.dataset.id;
+      const queixa = document.getElementById('f-queixa').value.trim();
+      const evolucao = document.getElementById('f-evolucao').value.trim();
+      if(!queixa || !evolucao){ showToast('Preencha queixa e evolução antes de salvar.'); return; }
+      if(!DATA.records[pid]) DATA.records[pid]=[];
+      DATA.records[pid].push({id:uid('r'), date:fmtDate(TODAY), doctor:currentUser().name, queixa, evolucao});
+      showToast('Registro salvo no prontuário.');
+      render(); return;
+    }
+    case 'agenda-date': STATE.agendaFilterDate = el.dataset.value; render(); return;
+    case 'toggle-block': {
+      const doc = currentUser(); const date = el.dataset.date; const t = el.dataset.value;
+      if(!DATA.blocked[doc.id]) DATA.blocked[doc.id]={};
+      if(!DATA.blocked[doc.id][date]) DATA.blocked[doc.id][date]=new Set();
+      const set = DATA.blocked[doc.id][date];
+      if(set.has(t)) set.delete(t); else set.add(t);
+      render(); return;
+    }
+
+    // reception
+    case 'filter-doctor': STATE.agendaFilterDoctor = el.value; render(); return;
+    case 'filter-date': STATE.agendaFilterDate = el.value; render(); return;
+    case 'quick-book': {
+      const patientId = document.getElementById('rq-patient').value;
+      const doctorId = document.getElementById('rq-doctor').value;
+      const date = document.getElementById('rq-date').value;
+      const time = document.getElementById('rq-time').value;
+      if(isSlotTaken(doctorId, date, time)){ showToast('Horário já ocupado para este médico.'); return; }
+      DATA.appointments.push({id:uid('a'), patientId, doctorId, date, time, status:'agendada'});
+      showToast('Consulta agendada com sucesso.');
+      render(); return;
+    }
+    case 'add-patient': {
+      const name = document.getElementById('np-name').value.trim();
+      if(!name){ showToast('Informe ao menos o nome do paciente.'); return; }
+      DATA.patients.push({
+        id:uid('p'), name,
+        cpf: document.getElementById('np-cpf').value || '—',
+        phone: document.getElementById('np-phone').value || '—',
+        email: document.getElementById('np-email').value || '—',
+        birth: '—',
+      });
+      showToast('Paciente cadastrado.');
+      render(); return;
+    }
+    case 'add-doctor': {
+      const name = document.getElementById('nd-name').value.trim();
+      if(!name){ showToast('Informe o nome do médico.'); return; }
+      DATA.doctors.push({
+        id:uid('d'), name, specialty: document.getElementById('nd-specialty').value,
+        crm: document.getElementById('nd-crm').value || 'CRM —',
+        initials: initials(name),
+      });
+      showToast('Médico cadastrado.');
+      render(); return;
+    }
+  }
+}
+
+render();
+</script>
+</body>
+</html>

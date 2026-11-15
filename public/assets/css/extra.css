@@ -1,0 +1,4 @@
+.alert{padding:11px 14px;border-radius:8px;margin-bottom:14px;font-size:14px}
+.alert-ok{background:var(--ok-soft);color:var(--ok)} .alert-err{background:var(--terracotta-soft);color:var(--terracotta)}
+.field textarea{resize:vertical} form{margin:0} .nav-item{text-decoration:none}
+.slot{background:#fff;cursor:pointer} .slot.taken,.slot.blocked{cursor:not-allowed}

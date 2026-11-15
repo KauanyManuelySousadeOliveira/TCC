@@ -1,0 +1,6 @@
+<?php /* $lista, $mostrar = ['paciente','medico'], $acoes (callable|null) */ ?>
+<div class="card"><?php if (!$lista): ?><div class="empty"><div class="em-title">Nada por aqui</div>Nenhuma consulta encontrada.</div><?php else: ?>
+<div style="overflow-x:auto"><table class="table"><thead><tr><th>Data</th><th>Hora</th><?php if (in_array('paciente', $mostrar)): ?><th>Paciente</th><?php endif; ?><?php if (in_array('medico', $mostrar)): ?><th>Médico</th><?php endif; ?><th>Status</th><?php if ($acoes ?? null): ?><th></th><?php endif; ?></tr></thead><tbody>
+<?php foreach ($lista as $c): ?><tr><td><?= e(fmt_date($c['data'])) ?> <span class="muted"><?= e(weekday_short($c['data'])) ?></span></td><td class="mono"><?= e($c['hora']) ?></td>
+<?php if (in_array('paciente', $mostrar)): ?><td><?= e($c['paciente']) ?></td><?php endif; ?><?php if (in_array('medico', $mostrar)): ?><td><?= e($c['medico']) ?><div class="muted" style="font-size:12px"><?= e($c['especialidade']) ?></div></td><?php endif; ?>
+<td><?= status_badge($c['status']) ?></td><?php if ($acoes ?? null): ?><td style="text-align:right"><?= $acoes($c) ?></td><?php endif; ?></tr><?php endforeach; ?></tbody></table></div><?php endif; ?></div>

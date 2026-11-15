@@ -1,0 +1,6 @@
+<div class="page-head"><div><h1>Prontuário — <?= e($p['nome']) ?></h1><p>CPF <?= e(fmt_cpf($p['cpf'])) ?> · <?= e($p['telefone']) ?><?= $p['nascimento'] ? ' · nasc. ' . e(fmt_date($p['nascimento'])) : '' ?></p></div><a class="btn btn-secondary" href="/medico/pacientes">← Pacientes</a></div>
+<div class="grid2" style="align-items:start">
+<div class="card pad"><div class="section-title">Nova evolução</div><form method="post" action="/medico/pacientes/<?= (int)$p['id'] ?>/prontuario"><?= csrf_field() ?>
+<div class="field"><label>Queixa</label><textarea name="queixa" rows="3" required></textarea></div><div class="field"><label>Evolução clínica</label><textarea name="evolucao" rows="5" required></textarea></div><button class="btn btn-primary">Registrar</button></form></div>
+<div class="card pad"><div class="section-title">Histórico</div><?php if (!$registros): ?><span class="muted">Sem registros.</span><?php endif; foreach ($registros as $r): ?>
+<div class="record-entry"><div class="re-date"><?= e(fmt_date($r['criado_em'])) ?></div><div class="re-doc"><?= e($r['medico']) ?></div><div><b>Queixa:</b> <?= e($r['queixa']) ?></div><div><b>Evolução:</b> <?= e($r['evolucao']) ?></div></div><?php endforeach; ?></div></div>

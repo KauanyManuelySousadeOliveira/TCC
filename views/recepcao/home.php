@@ -1,0 +1,3 @@
+<div class="page-head"><div><h1>Olá, <?= e(explode(' ', $u['nome'])[0]) ?></h1><p>Visão geral da operação de hoje.</p></div><a class="btn btn-primary" href="/recepcao/agendar">➕ Novo agendamento</a></div>
+<div class="stat-row"><?php foreach ([[count($hoje),'Consultas hoje'],[$pendentes,'A confirmar'],[$pacientes,'Pacientes'],[$medicos,'Médicos ativos']] as [$n,$l]): ?><div class="card stat-card"><div class="stat-num"><?= $n ?></div><div class="stat-label"><?= $l ?></div></div><?php endforeach; ?></div>
+<div class="section-title">Agenda de hoje</div><?php $lista = $hoje; $mostrar = ['paciente', 'medico']; $acoes = null; require __DIR__ . '/../partials/consultas.php'; ?>
